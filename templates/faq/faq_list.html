@@ -1,0 +1,136 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Corporate Help Center & FAQs — PerkCart{% endblock %}
+
+{% block content %}
+<div class="container">
+    <!-- Header Banner -->
+    <div class="text-center py-4 mb-4">
+        <span class="badge bg-primary px-3 py-2 text-uppercase mb-2">Knowledge Base</span>
+        <h2 class="fw-extrabold text-dark">Frequently Asked Corporate Questions</h2>
+        <p class="text-muted max-w-md mx-auto">
+            Find immediate answers regarding employee eligibility, corporate verification, payment deduction, delivery, and warranty support.
+        </p>
+
+        <!-- Search Bar -->
+        <form method="GET" action="{% url 'faq:faq_list' %}" class="mx-auto mt-3" style="max-width: 540px;">
+            {% if selected_category %}<input type="hidden" name="category" value="{{ selected_category.slug }}">{% endif %}
+            <div class="input-group input-group-lg shadow-sm rounded-pill overflow-hidden border">
+                <span class="input-group-text bg-white border-0 ps-3 text-muted"><i class="bi bi-search"></i></span>
+                <input type="text" name="q" class="form-control border-0" placeholder="Search questions (e.g. verification, returns, payroll)..." value="{{ query }}">
+                <button type="submit" class="btn btn-corp-primary px-4 fw-bold">Search</button>
+            </div>
+        </form>
+    </div>
+
+    <!-- Category Pills Filter -->
+    <div class="d-flex flex-wrap justify-content-center gap-2 mb-4">
+        <a href="{% url 'faq:faq_list' %}" class="btn btn-sm {% if not selected_category %}btn-primary{% else %}btn-outline-secondary bg-white text-dark{% endif %} rounded-pill px-3">
+            All Questions ({{ total_faqs }})
+        </a>
+        {% for cat in categories %}
+        <a href="{% url 'faq:faq_list' %}?category={{ cat.slug }}" class="btn btn-sm {% if selected_category.slug == cat.slug %}btn-primary{% else %}btn-outline-secondary bg-white text-dark{% endif %} rounded-pill px-3">
+            <i class="bi {{ cat.icon }} me-1"></i> {{ cat.name }} ({{ cat.faqs.count }})
+        </a>
+        {% endfor %}
+    </div>
+
+    <div class="row g-4">
+        <!-- Main FAQs Accordion -->
+        <div class="col-lg-8">
+            {% if faqs %}
+                <div class="accordion faq-accordion" id="faqAccordionMain">
+                    {% for faq in faqs %}
+                    <div class="accordion-item shadow-sm">
+                        <h2 class="accordion-header" id="heading-faq-{{ faq.id }}">
+                            <button class="accordion-button {% if not forloop.first %}collapsed{% endif %}" type="button" data-bs-toggle="collapse" data-bs-target="#collapse-faq-{{ faq.id }}" aria-expanded="{% if forloop.first %}true{% else %}false{% endif %}" aria-controls="collapse-faq-{{ faq.id }}">
+                                <span class="badge bg-primary-subtle text-primary me-2 font-monospace small" style="font-size: 0.72rem;">{{ faq.category.name }}</span>
+                                <span class="fw-bold">{{ faq.question }}</span>
+                            </button>
+                        </h2>
+                        <div id="collapse-faq-{{ faq.id }}" class="accordion-collapse collapse {% if forloop.first %}show{% endif %}" aria-labelledby="heading-faq-{{ faq.id }}" data-bs-parent="#faqAccordionMain">
+                            <div class="accordion-body">
+                                <p class="text-dark mb-3" style="line-height: 1.7;">{{ faq.answer }}</p>
+
+                                <!-- Helpful / Unhelpful Feedback Widget -->
+                                <div class="faq-feedback-container pt-3 border-top d-flex justify-content-between align-items-center flex-wrap gap-2">
+                                    <span class="small text-muted fw-semibold">Was this answer helpful?</span>
+                                    <div class="d-flex align-items-center gap-2">
+                                        <button class="btn btn-sm btn-outline-success btn-faq-vote d-flex align-items-center gap-1" data-faq-id="{{ faq.id }}" data-vote-type="helpful">
+                                            <i class="bi bi-hand-thumbs-up"></i>
+                                            <span>Yes</span> (<span class="faq-helpful-num fw-bold">{{ faq.helpful_count }}</span>)
+                                        </button>
+                                        <button class="btn btn-sm btn-outline-danger btn-faq-vote d-flex align-items-center gap-1" data-faq-id="{{ faq.id }}" data-vote-type="unhelpful">
+                                            <i class="bi bi-hand-thumbs-down"></i>
+                                            <span>No</span> (<span class="faq-unhelpful-num fw-bold">{{ faq.unhelpful_count }}</span>)
+                                        </button>
+                                    </div>
+                                    <div class="w-100 faq-feedback-msg"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <div class="text-center py-5 bg-light rounded-4 border">
+                    <i class="bi bi-question-circle fs-1 text-muted mb-3 d-block"></i>
+                    <h5 class="fw-bold">No FAQs Found</h5>
+                    <p class="text-muted small mb-3">No questions matched your search query. You can ask our AI assistant or report your question below.</p>
+                    <a href="{% url 'faq:faq_list' %}" class="btn btn-corp-primary btn-sm">Clear FAQ Search</a>
+                </div>
+            {% endif %}
+        </div>
+
+        <!-- Sidebar: Report Unanswered Question Form -->
+        <div class="col-lg-4">
+            <div class="card border rounded-4 p-4 shadow-sm bg-light sticky-top" style="top: 90px;">
+                <div class="d-flex align-items-center gap-2 mb-2 text-primary">
+                    <i class="bi bi-chat-left-dots-fill fs-4"></i>
+                    <h5 class="fw-bold mb-0">Ask PerkCart Support</h5>
+                </div>
+                <p class="small text-muted mb-3">
+                    Can't find an answer to your specific employee inquiry? Submit your question and our team will respond and update our knowledge base.
+                </p>
+
+                <form method="POST" action="{% url 'faq:faq_list' %}">
+                    {% csrf_token %}
+                    <input type="hidden" name="submit_question" value="1">
+
+                    <div class="mb-2">
+                        <label class="form-label small fw-bold">Your Name *</label>
+                        <input type="text" name="name" class="form-control form-control-sm" value="{% if user.is_authenticated %}{{ user.get_full_name|default:user.username }}{% endif %}" required>
+                    </div>
+
+                    <div class="mb-2">
+                        <label class="form-label small fw-bold">Corporate Email *</label>
+                        <input type="email" name="email" class="form-control form-control-sm" value="{% if user.is_authenticated %}{{ user.email }}{% endif %}" required>
+                    </div>
+
+                    <div class="mb-2">
+                        <label class="form-label small fw-bold">Company / Partner Name</label>
+                        <input type="text" name="company_name" class="form-control form-control-sm" value="{% if user.is_authenticated and user_profile %}{{ user_profile.company_name }}{% endif %}" placeholder="e.g. Apex Global Technologies">
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold">Your Question *</label>
+                        <textarea name="question" class="form-control form-control-sm" rows="3" placeholder="Describe your question or issue in detail..." required></textarea>
+                    </div>
+
+                    <button type="submit" class="btn btn-corp-primary btn-sm w-100 fw-bold py-2">
+                        <i class="bi bi-send-fill me-1"></i> Submit Question
+                    </button>
+                </form>
+
+                <div class="p-3 bg-white rounded-3 border mt-3 text-center">
+                    <span class="small text-muted d-block mb-1">Instant Interactive Help:</span>
+                    <button type="button" class="btn btn-outline-primary btn-sm w-100" data-bs-toggle="offcanvas" data-bs-target="#aiAssistantOffcanvas">
+                        <i class="bi bi-robot me-1"></i> Ask AI Assistant Now
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

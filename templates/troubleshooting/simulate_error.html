@@ -1,0 +1,109 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Admin Safe Error Simulator — PerkCart{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="mb-4 pb-2 border-bottom d-flex justify-content-between align-items-center flex-wrap gap-2">
+        <div>
+            <div class="d-flex align-items-center gap-2">
+                <span class="badge bg-warning text-dark font-monospace fw-bold">EVALUATOR DEMONSTRATION TOOL</span>
+                <h2 class="fw-bold mb-0">Safe Error Simulator & AppErrorLog Monitor</h2>
+            </div>
+            <p class="text-muted small mb-0 mt-1">Safely trigger sample system errors, verify structured database recording, and inspect user-facing friendly error pages.</p>
+        </div>
+        <a href="{% url 'troubleshooting:error_list' %}" class="btn btn-corp-outline btn-sm">
+            &larr; Error Knowledgebase
+        </a>
+    </div>
+
+    <div class="row g-4 mb-5">
+        <!-- Error Trigger Panel -->
+        <div class="col-lg-5">
+            <div class="card border rounded-4 p-4 shadow-sm bg-light">
+                <h5 class="fw-bold mb-3"><i class="bi bi-play-circle-fill text-danger me-2"></i> Trigger Simulated Anomaly</h5>
+                <p class="small text-muted mb-3">
+                    Select an error code to trigger a safe demonstration log. The system logs sanitized contextual details (timestamp, route, method, sanitized IP) to <code>AppErrorLog</code> without leaking passwords or keys.
+                </p>
+
+                <form method="POST">
+                    {% csrf_token %}
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold">Select Diagnostic Error Code *</label>
+                        <select name="error_code" class="form-select">
+                            {% for err in error_choices %}
+                                <option value="{{ err.code }}">[{{ err.code }}] {{ err.title }} ({{ err.get_severity_display }})</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold">Simulation Audit Note</label>
+                        <input type="text" name="simulation_note" class="form-control form-control-sm" value="Evaluator live evaluation demonstration check." required>
+                    </div>
+
+                    <button type="submit" class="btn btn-danger w-100 fw-bold py-2 shadow-sm">
+                        <i class="bi bi-lightning-charge-fill me-1"></i> Trigger Safe Error Simulation
+                    </button>
+                </form>
+
+                <div class="p-3 bg-white rounded-3 border mt-4 small text-muted">
+                    <strong class="text-dark"><i class="bi bi-shield-check text-success me-1"></i> Security Guarantee:</strong>
+                    Raw Python tracebacks, database passwords, and API keys are strictly excluded from ordinary user views and error responses.
+                </div>
+            </div>
+        </div>
+
+        <!-- Real-time AppErrorLog Viewer -->
+        <div class="col-lg-7">
+            <div class="card border rounded-4 shadow-sm overflow-hidden">
+                <div class="card-header bg-white p-3 border-bottom d-flex justify-content-between align-items-center">
+                    <h5 class="fw-bold mb-0"><i class="bi bi-journal-text text-primary me-2"></i> Recent <code>AppErrorLog</code> Records</h5>
+                    <span class="badge bg-secondary">{{ recent_logs.count }} Records</span>
+                </div>
+                <div class="table-responsive" style="max-height: 480px; overflow-y: auto;">
+                    <table class="table table-hover align-middle mb-0 small">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Timestamp</th>
+                                <th>Code</th>
+                                <th>Route / Method</th>
+                                <th>User / Context</th>
+                                <th>Message</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for log in recent_logs %}
+                            <tr>
+                                <td class="text-nowrap text-muted">{{ log.timestamp|date:"M d, H:i:s" }}</td>
+                                <td>
+                                    <span class="badge bg-dark font-monospace">{{ log.error_code }}</span>
+                                </td>
+                                <td class="text-nowrap font-monospace text-secondary" style="font-size: 0.75rem;">
+                                    {{ log.method }} {{ log.path|truncatechars:20 }}
+                                </td>
+                                <td class="text-nowrap">
+                                    {% if log.user %}
+                                        <span class="badge bg-primary-subtle text-primary">{{ log.user.username }}</span>
+                                    {% else %}
+                                        <span class="badge bg-light text-muted border">Guest</span>
+                                    {% endif %}
+                                </td>
+                                <td class="text-dark">{{ log.message|truncatechars:45 }}</td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="5" class="text-center py-4 text-muted">
+                                    No application error logs currently recorded. Use the trigger panel on the left to test.
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

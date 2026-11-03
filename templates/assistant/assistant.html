@@ -1,0 +1,241 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}PerkCart AI Shopping Assistant — Full View{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row g-4 justify-content-center">
+        <!-- Main Chat Area -->
+        <div class="col-lg-9">
+            <div class="card border rounded-4 shadow-sm overflow-hidden d-flex flex-column" style="height: 75vh;">
+                <!-- Header -->
+                <div class="card-header bg-dark text-white p-3 d-flex justify-content-between align-items-center">
+                    <div class="d-flex align-items-center gap-3">
+                        <div class="bg-primary text-white rounded-circle p-2 d-flex align-items-center justify-content-center" style="width: 42px; height: 42px;">
+                            <i class="bi bi-robot fs-4"></i>
+                        </div>
+                        <div>
+                            <h5 class="fw-bold mb-0">PerkCart AI Procurement Assistant</h5>
+                            <span class="small text-info">Grounded Corporate RAG Engine (Zero Hallucination)</span>
+                        </div>
+                    </div>
+                    <div class="d-flex align-items-center gap-2">
+                        <button type="button" class="btn btn-outline-light btn-sm" id="btn-clear-chat" title="Clear Chat History">
+                            <i class="bi bi-trash me-1"></i> Clear History
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Suggested Query Chips Bar -->
+                <div class="p-3 bg-light border-bottom">
+                    <div class="small fw-bold text-muted mb-2" style="font-size: 0.75rem;">SUGGESTED SHOPPING & PROCUREMENT PROMPTS:</div>
+                    <div class="d-flex flex-wrap gap-2">
+                        {% for prompt in suggested_prompts %}
+                        <button type="button" class="btn btn-sm btn-white border rounded-pill text-dark suggested-chip shadow-xs" data-prompt="{{ prompt }}">
+                            {{ prompt }}
+                        </button>
+                        {% endfor %}
+                    </div>
+                </div>
+
+                <!-- Chat Messages Scroll Container -->
+                <div id="full-chat-messages" class="chat-messages-area p-4" style="flex-grow: 1; overflow-y: auto;">
+                    <!-- Welcome message -->
+                    <div class="chat-bubble assistant">
+                        Hello {% if user.is_authenticated %}{{ user.first_name|default:user.username }}{% else %}corporate colleague{% endif %}! 👋
+                        <br><br>
+                        I am your dedicated <strong>PerkCart AI Shopping Assistant</strong>. I am directly connected to our database of enterprise hardware, active corporate coupons, shopping FAQs, and diagnostic error codes.
+                        <br><br>
+                        <strong>How I can help you today:</strong>
+                        <ul class="mb-2 mt-2">
+                            <li>Find laptops or hardware within your department budget (e.g., <em>"Laptops under ₹90,000"</em>)</li>
+                            <li>Compare specifications (e.g., <em>"Compare PerkBook Ultra 16 Pro and ThinkPro X1"</em>)</li>
+                            <li>Find active corporate coupon codes (e.g., <em>"What coupons are valid right now?"</em>)</li>
+                            <li>Explain employee verification status and corporate subsidized billing</li>
+                            <li>Diagnose error codes (e.g., <em>"Why did I see error AUTH-002 or CART-001?"</em>)</li>
+                            {% if user.is_authenticated %}
+                                <li>Track your recent orders and shipment statuses</li>
+                            {% endif %}
+                        </ul>
+                        <div class="mt-2 text-muted small" style="font-size: 0.72rem;">
+                            <i class="bi bi-shield-check text-success"></i> <em>Database grounded • Zero hallucination guarantees applied.</em>
+                        </div>
+                    </div>
+
+                    <!-- Past DB Messages for authenticated user -->
+                    {% for msg in messages_history %}
+                    <div class="chat-bubble {{ msg.role }}">
+                        <div>{{ msg.content|linebreaksbr }}</div>
+                        {% if msg.role == 'assistant' and msg.engine_used %}
+                            <div class="mt-2 text-muted small" style="font-size: 0.72rem;">
+                                <i class="bi bi-cpu"></i> <em>{{ msg.engine_used }}</em>
+                            </div>
+                        {% endif %}
+                        {% if msg.retrieved_sources %}
+                            <div class="mt-2 pt-2 border-top border-secondary-subtle">
+                                <span class="small text-muted fw-bold" style="font-size: 0.72rem;">Verified Sources:</span><br>
+                                {% for src in msg.retrieved_sources %}
+                                    <a href="{{ src.url }}" class="chat-source-chip" target="_blank" title="{{ src.snippet }}">
+                                        <i class="bi bi-box-arrow-up-right"></i> {{ src.title }}
+                                    </a>
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
+                    {% endfor %}
+                </div>
+
+                <!-- Input Footer -->
+                <div class="p-3 bg-white border-top">
+                    <div class="input-group input-group-lg">
+                        <input type="text" id="full-chat-input" class="form-control" placeholder="Type your hardware or corporate procurement inquiry..." maxlength="500">
+                        <button class="btn btn-corp-primary px-4 fw-bold" type="button" id="full-chat-send">
+                            <i class="bi bi-send-fill me-1"></i> Ask
+                        </button>
+                    </div>
+                    <div class="d-flex justify-content-between align-items-center mt-2 small text-muted">
+                        <span>Press <strong>Enter</strong> to send • Max 500 characters</span>
+                        <span><i class="bi bi-check-circle-fill text-success"></i> Real-time Grounded Retrieval</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    const fullInput = document.getElementById('full-chat-input');
+    const fullSendBtn = document.getElementById('full-chat-send');
+    const fullContainer = document.getElementById('full-chat-messages');
+    const clearBtn = document.getElementById('btn-clear-chat');
+
+    function scrollBottom() {
+        if (fullContainer) fullContainer.scrollTop = fullContainer.scrollHeight;
+    }
+    scrollBottom();
+
+    async function sendFullMessage(prompt) {
+        const text = prompt || (fullInput ? fullInput.value.trim() : '');
+        if (!text) return;
+        if (fullInput) fullInput.value = '';
+
+        // Append User bubble
+        appendBubble('user', text);
+
+        // Loading
+        const loadId = 'loading-' + Date.now();
+        const loader = document.createElement('div');
+        loader.id = loadId;
+        loader.className = 'chat-bubble assistant text-muted small';
+        loader.innerHTML = `
+            <div class="d-flex align-items-center gap-2">
+                <div class="spinner-grow spinner-grow-sm text-primary" role="status"></div>
+                <span>PerkCart Assistant retrieving database records...</span>
+            </div>
+        `;
+        fullContainer.appendChild(loader);
+        scrollBottom();
+
+        try {
+            const resp = await fetch('/ai-assistant/api/chat/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': getCookie('csrftoken'),
+                    'X-Requested-With': 'XMLHttpRequest'
+                },
+                body: JSON.stringify({ query: text })
+            });
+
+            const el = document.getElementById(loadId);
+            if (el) el.remove();
+
+            if (!resp.ok) {
+                appendBubble('assistant', '⚠️ Unable to connect to PerkCart AI service. Please retry.');
+                return;
+            }
+
+            const data = await resp.json();
+            if (data.status === 'success') {
+                appendBubble('assistant', data.content, data.engine, data.sources);
+            } else {
+                appendBubble('assistant', `⚠️ ${data.message}`);
+            }
+        } catch (err) {
+            const el = document.getElementById(loadId);
+            if (el) el.remove();
+            appendBubble('assistant', '⚠️ Network latency prevented receiving AI answer.');
+        }
+        scrollBottom();
+    }
+
+    function appendBubble(role, content, engine = '', sources = []) {
+        if (!fullContainer) return;
+        const msgDiv = document.createElement('div');
+        msgDiv.className = `chat-bubble ${role}`;
+
+        let formatted = (window.formatMarkdown ? window.formatMarkdown(content) : content.replace(/\n/g, '<br>'));
+        // Fallback markdown replacer
+        formatted = formatted
+            .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+            .replace(/\*(.*?)\*/g, '<em>$1</em>')
+            .replace(/`([^`]+)`/g, '<code>$1</code>')
+            .replace(/\[(.*?)\]\((.*?)\)/g, '<a href="$2" class="text-primary text-decoration-underline">$1</a>');
+
+        let html = `<div>${formatted}</div>`;
+
+        if (role === 'assistant' && engine) {
+            html += `<div class="mt-2 text-muted small" style="font-size: 0.72rem;">
+                <i class="bi bi-cpu"></i> <em>${engine}</em>
+            </div>`;
+        }
+
+        if (sources && sources.length > 0) {
+            html += `<div class="mt-2 pt-2 border-top border-secondary-subtle">
+                <span class="small text-muted fw-bold" style="font-size: 0.72rem;">Verified Sources:</span><br>`;
+            sources.forEach(src => {
+                html += `<a href="${src.url}" class="chat-source-chip" target="_blank" title="${src.snippet}">
+                    <i class="bi bi-box-arrow-up-right"></i> ${src.title}
+                </a>`;
+            });
+            html += `</div>`;
+        }
+
+        msgDiv.innerHTML = html;
+        fullContainer.appendChild(msgDiv);
+    }
+
+    if (fullSendBtn) fullSendBtn.addEventListener('click', () => sendFullMessage());
+    if (fullInput) {
+        fullInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                sendFullMessage();
+            }
+        });
+    }
+
+    document.querySelectorAll('.suggested-chip').forEach(btn => {
+        btn.addEventListener('click', () => {
+            sendFullMessage(btn.dataset.prompt || btn.textContent.trim());
+        });
+    });
+
+    if (clearBtn) {
+        clearBtn.addEventListener('click', async () => {
+            if (confirm('Clear your conversation history?')) {
+                await fetch('/ai-assistant/api/clear/', {
+                    method: 'POST',
+                    headers: { 'X-CSRFToken': getCookie('csrftoken') }
+                });
+                window.location.reload();
+            }
+        });
+    }
+});
+</script>
+{% endblock %}

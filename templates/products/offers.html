@@ -1,0 +1,62 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Corporate Offers & Employee Coupons — PerkCart{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="text-center py-4 mb-4">
+        <span class="badge bg-danger px-3 py-2 text-uppercase mb-2">Corporate Privileges</span>
+        <h2 class="fw-extrabold text-dark">Active Employee Offers & Discount Coupons</h2>
+        <p class="text-muted max-w-md mx-auto">
+            These exclusive corporate coupons can be applied during checkout on top of subsidized catalog prices.
+        </p>
+    </div>
+
+    <div class="row g-4 mb-5">
+        {% for offer in offers %}
+        <div class="col-md-6 col-lg-3">
+            <div class="card h-100 border rounded-4 shadow-sm overflow-hidden">
+                <div class="card-header bg-dark text-white p-3 d-flex justify-content-between align-items-center">
+                    <span class="font-monospace fw-bold fs-5 text-warning">{{ offer.code }}</span>
+                    <span class="badge bg-success">{{ offer.discount_percent }}% OFF</span>
+                </div>
+                <div class="card-body p-4 d-flex flex-column">
+                    <h5 class="fw-bold text-dark mb-2">{{ offer.title }}</h5>
+                    <p class="text-muted small mb-3 flex-grow-1">{{ offer.description }}</p>
+                    <div class="p-2 bg-light rounded-3 border mb-3 small">
+                        <div><strong>Min Order:</strong> ₹{{ offer.min_order_amount|floatformat:0 }}</div>
+                        {% if offer.max_discount_amount %}
+                            <div><strong>Max Cap:</strong> ₹{{ offer.max_discount_amount|floatformat:0 }}</div>
+                        {% endif %}
+                    </div>
+                    <a href="{% url 'products:product_list' %}" class="btn btn-corp-outline btn-sm w-100">
+                        Apply on Products &rarr;
+                    </a>
+                </div>
+            </div>
+        </div>
+        {% empty %}
+        <div class="col-12 text-center py-5">
+            <p class="text-muted">No promotional coupons are currently active. Check back soon!</p>
+        </div>
+        {% endfor %}
+    </div>
+
+    <!-- Instructions on how to redeem -->
+    <div class="p-4 bg-light rounded-4 border">
+        <h5 class="fw-bold mb-3"><i class="bi bi-info-circle-fill text-primary me-2"></i> How to Redeem Corporate Coupons</h5>
+        <div class="row g-3 small text-muted">
+            <div class="col-md-4">
+                <strong>1. Add Items to Cart:</strong> Browse the hardware catalog and add your chosen equipment or accessories to your shopping cart.
+            </div>
+            <div class="col-md-4">
+                <strong>2. Enter Coupon Code:</strong> In the cart summary or checkout page, enter your code into the coupon field and click Apply.
+            </div>
+            <div class="col-md-4">
+                <strong>3. Instant Recalculation:</strong> The server automatically recalculates your savings and applies the subsidy immediately to your order total.
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,166 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Order #{{ order.order_number }} Receipt & Tracking — PerkCart{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="d-flex justify-content-between align-items-center mb-4 pb-3 border-bottom flex-wrap gap-2">
+        <div>
+            <div class="d-flex align-items-center gap-2">
+                <h2 class="fw-bold mb-0">Order #{{ order.order_number }}</h2>
+                <span class="badge bg-success-subtle text-success px-3 py-1 font-monospace fw-bold">{{ order.get_status_display }}</span>
+            </div>
+            <p class="text-muted small mb-0 mt-1">Placed on {{ order.created_at|date:"F d, Y \a\t h:i A" }} • Transaction: <code>{{ order.transaction_id }}</code></p>
+        </div>
+        <div class="d-flex gap-2">
+            <button onclick="window.print()" class="btn btn-corp-outline btn-sm">
+                <i class="bi bi-printer me-1"></i> Print Invoice
+            </button>
+            <a href="{% url 'cart:order_list' %}" class="btn btn-corp-primary btn-sm">
+                &larr; All Orders
+            </a>
+        </div>
+    </div>
+
+    <!-- Fulfillment Tracking Timeline -->
+    <div class="card border rounded-4 p-4 shadow-sm mb-4">
+        <h6 class="fw-bold mb-4 text-uppercase text-muted" style="font-size: 0.8rem;">Fulfillment Progress Tracker</h6>
+        <div class="row text-center g-3">
+            <div class="col-3">
+                <div class="p-2 bg-success text-white rounded-circle d-inline-flex mb-2" style="width: 40px; height: 40px; align-items: center; justify-content: center;">
+                    <i class="bi bi-check-lg"></i>
+                </div>
+                <div class="fw-bold small text-dark">Order Confirmed</div>
+                <div class="text-muted" style="font-size: 0.72rem;">{{ order.created_at|date:"M d" }}</div>
+            </div>
+            <div class="col-3">
+                <div class="p-2 bg-success text-white rounded-circle d-inline-flex mb-2" style="width: 40px; height: 40px; align-items: center; justify-content: center;">
+                    <i class="bi bi-check-lg"></i>
+                </div>
+                <div class="fw-bold small text-dark">Corporate Verified</div>
+                <div class="text-muted" style="font-size: 0.72rem;">Subsidies Applied</div>
+            </div>
+            <div class="col-3">
+                <div class="p-2 {% if order.status in 'SHIPPED,DELIVERED' %}bg-success text-white{% else %}bg-primary text-white{% endif %} rounded-circle d-inline-flex mb-2" style="width: 40px; height: 40px; align-items: center; justify-content: center;">
+                    <i class="bi bi-truck"></i>
+                </div>
+                <div class="fw-bold small text-dark">Dispatched</div>
+                <div class="text-muted" style="font-size: 0.72rem;">{{ order.tracking_number }}</div>
+            </div>
+            <div class="col-3">
+                <div class="p-2 {% if order.status == 'DELIVERED' %}bg-success text-white{% else %}bg-secondary-subtle text-muted{% endif %} rounded-circle d-inline-flex mb-2" style="width: 40px; height: 40px; align-items: center; justify-content: center;">
+                    <i class="bi bi-house-check"></i>
+                </div>
+                <div class="fw-bold small {% if order.status == 'DELIVERED' %}text-dark{% else %}text-muted{% endif %}">Delivered</div>
+                <div class="text-muted" style="font-size: 0.72rem;">Est: {{ order.estimated_delivery }}</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-4">
+        <!-- Order Items Table -->
+        <div class="col-lg-8">
+            <div class="card border rounded-4 shadow-sm overflow-hidden mb-4">
+                <div class="card-header bg-white p-3 border-bottom">
+                    <h6 class="fw-bold mb-0">Purchased Hardware ({{ order.total_items }} units)</h6>
+                </div>
+                <div class="table-responsive">
+                    <table class="table align-middle mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Item Description</th>
+                                <th class="text-center">Rate</th>
+                                <th class="text-center">Qty</th>
+                                <th class="text-end">Item Total</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for item in order.items.all %}
+                            <tr>
+                                <td>
+                                    <div class="d-flex align-items-center gap-2">
+                                        {% if item.product and item.product.image_url %}
+                                            <img src="{{ item.product.image_url }}" alt="{{ item.product_name }}" class="rounded border" style="width: 45px; height: 45px; object-fit: contain;">
+                                        {% endif %}
+                                        <div>
+                                            <div class="fw-bold small text-dark">{{ item.product_name }}</div>
+                                            {% if item.product %}
+                                                <a href="{% url 'products:product_detail' slug=item.product.slug %}" class="small text-primary text-decoration-none" style="font-size: 0.75rem;">View Specs</a>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                </td>
+                                <td class="text-center small">₹{{ item.price|floatformat:2 }}</td>
+                                <td class="text-center small font-monospace">{{ item.quantity }}</td>
+                                <td class="text-end fw-bold small text-dark">₹{{ item.item_total|floatformat:2 }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Shipping & Billing Cards -->
+            <div class="row g-3">
+                <div class="col-md-6">
+                    <div class="card border rounded-4 p-3 h-100 shadow-sm">
+                        <h6 class="fw-bold mb-2 small text-uppercase text-muted"><i class="bi bi-geo-alt text-primary me-1"></i> Delivery Address</h6>
+                        <div class="fw-bold text-dark">{{ order.full_name }}</div>
+                        <div class="small text-muted">{{ order.shipping_address }}</div>
+                        <div class="small text-muted">{{ order.city }} - {{ order.postal_code }}</div>
+                        <div class="small text-muted mt-2"><i class="bi bi-telephone"></i> {{ order.phone }}</div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="card border rounded-4 p-3 h-100 shadow-sm">
+                        <h6 class="fw-bold mb-2 small text-uppercase text-muted"><i class="bi bi-credit-card text-primary me-1"></i> Simulated Billing Details</h6>
+                        <div class="fw-bold text-dark">{{ order.get_payment_method_display }}</div>
+                        <div class="small text-muted">Status: <span class="badge bg-success-subtle text-success">{{ order.get_payment_status_display }}</span></div>
+                        <div class="small text-muted">Corporate Email: {{ order.corporate_email }}</div>
+                        {% if order.company_name %}
+                            <div class="small text-muted">Company: {{ order.company_name }}</div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Summary Totals Card -->
+        <div class="col-lg-4">
+            <div class="card border rounded-4 p-4 shadow-sm">
+                <h6 class="fw-bold mb-3 pb-2 border-bottom">Invoice Breakdown</h6>
+
+                <div class="d-flex justify-content-between mb-2 small">
+                    <span class="text-muted">Subtotal</span>
+                    <span class="fw-semibold text-dark">₹{{ order.subtotal|floatformat:2 }}</span>
+                </div>
+
+                {% if order.discount_amount > 0 %}
+                <div class="d-flex justify-content-between mb-2 small text-success">
+                    <span>Corporate Coupon ({% if order.coupon_code %}{{ order.coupon_code }}{% else %}Special Discount{% endif %})</span>
+                    <span>-₹{{ order.discount_amount|floatformat:2 }}</span>
+                </div>
+                {% endif %}
+
+                <div class="d-flex justify-content-between mb-2 small">
+                    <span class="text-muted">Expedited Delivery</span>
+                    <span class="text-success fw-bold">FREE</span>
+                </div>
+
+                <hr>
+
+                <div class="d-flex justify-content-between align-items-baseline mb-4">
+                    <span class="fs-5 fw-bold text-dark">Total Paid</span>
+                    <span class="fs-3 fw-extrabold text-primary">₹{{ order.total_amount|floatformat:2 }}</span>
+                </div>
+
+                <div class="p-3 bg-light rounded-3 text-center small text-muted">
+                    <i class="bi bi-shield-check text-success fs-5 d-block mb-1"></i>
+                    Official Warranty Active. Equipment registered in enterprise fleet directory.
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

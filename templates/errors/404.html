@@ -1,0 +1,25 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Page Not Found — PerkCart{% endblock %}
+
+{% block content %}
+<div class="container py-5 text-center">
+    <div class="p-4 p-md-5 bg-light rounded-4 border max-w-md mx-auto shadow-sm" style="max-width: 580px;">
+        <div class="badge bg-secondary px-3 py-2 text-uppercase mb-3 font-monospace">404 NOT FOUND</div>
+        <h3 class="fw-bold text-dark mb-2">We Couldn't Find That Corporate Page</h3>
+        <p class="text-secondary mb-4">
+            The hardware item, order reference, or URL you requested does not exist or may have been moved.
+        </p>
+
+        <div class="d-flex justify-content-center gap-3">
+            <a href="{% url 'products:product_list' %}" class="btn btn-corp-primary btn-sm px-4">
+                Explore Hardware Catalog &rarr;
+            </a>
+            <a href="{% url 'core:home' %}" class="btn btn-corp-outline btn-sm">
+                Return Home
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}

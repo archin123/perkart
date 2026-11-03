@@ -1,0 +1,90 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Admin Employee Verification Console — PerkCart{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="d-flex justify-content-between align-items-center mb-4 pb-2 border-bottom flex-wrap gap-2">
+        <div>
+            <div class="d-flex align-items-center gap-2">
+                <span class="badge bg-primary text-white font-monospace">STAFF CONSOLE</span>
+                <h2 class="fw-bold mb-0">Employee Verification Management</h2>
+            </div>
+            <p class="text-muted small mb-0 mt-1">Review pending corporate employee verification requests. Approve or reject with instant privilege activation.</p>
+        </div>
+        <div class="d-flex gap-2">
+            <a href="{% url 'admin:accounts_employeeverification_changelist' %}" target="_blank" class="btn btn-corp-outline btn-sm">
+                <i class="bi bi-speedometer2 me-1"></i> Open in Django Admin
+            </a>
+            <a href="{% url 'accounts:profile' %}" class="btn btn-corp-primary btn-sm">
+                My Profile
+            </a>
+        </div>
+    </div>
+
+    <div class="alert alert-warning border-0 rounded-4 p-3 mb-4 d-flex align-items-center gap-3">
+        <i class="bi bi-shield-lock-fill fs-3 text-warning"></i>
+        <div class="small">
+            <strong>Demonstration Simulation Workflow:</strong> In this evaluation environment, clicking "Approve" instantly marks the user's <code>UserProfile.is_corporate_verified = True</code>, granting full checkout access to corporate subsidies. Clicking "Reject" sets status to <code>REJECTED</code>.
+        </div>
+    </div>
+
+    <div class="card border rounded-4 shadow-sm overflow-hidden mb-5">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th>User Account</th>
+                        <th>Company Name</th>
+                        <th>Employee ID</th>
+                        <th>Corporate Email</th>
+                        <th>Submitted At</th>
+                        <th>Current Status</th>
+                        <th class="text-end">Demonstration Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for req in verifications %}
+                    <tr>
+                        <td>
+                            <div class="fw-bold text-dark">{{ req.user.get_full_name|default:req.user.username }}</div>
+                            <div class="small text-muted font-monospace">@{{ req.user.username }}</div>
+                        </td>
+                        <td class="fw-semibold text-secondary">{{ req.company_name }}</td>
+                        <td class="font-monospace small">{{ req.employee_id }}</td>
+                        <td class="small">{{ req.corporate_email }}</td>
+                        <td class="small text-muted">{{ req.submitted_at|date:"M d, Y h:i A" }}</td>
+                        <td>
+                            {% if req.status == 'APPROVED' %}
+                                <span class="badge bg-success-subtle text-success px-3 py-2 fw-bold">APPROVED</span>
+                            {% elif req.status == 'REJECTED' %}
+                                <span class="badge bg-danger-subtle text-danger px-3 py-2 fw-bold">REJECTED</span>
+                            {% else %}
+                                <span class="badge bg-warning-subtle text-warning px-3 py-2 fw-bold">PENDING</span>
+                            {% endif %}
+                        </td>
+                        <td class="text-end">
+                            <div class="btn-group btn-group-sm">
+                                <a href="{% url 'accounts:admin_update_verification' pk=req.id action='approve' %}" class="btn btn-outline-success {% if req.status == 'APPROVED' %}active{% endif %}">
+                                    <i class="bi bi-check-lg"></i> Approve
+                                </a>
+                                <a href="{% url 'accounts:admin_update_verification' pk=req.id action='reject' %}" class="btn btn-outline-danger {% if req.status == 'REJECTED' %}active{% endif %}">
+                                    <i class="bi bi-x-lg"></i> Reject
+                                </a>
+                            </div>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="7" class="text-center py-4 text-muted">
+                            No verification requests currently pending.
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

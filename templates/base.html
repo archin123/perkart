@@ -1,0 +1,329 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}PerkCart — Corporate Employee Shopping Platform{% endblock %}</title>
+    
+    <!-- Google Fonts: Plus Jakarta Sans -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <!-- Bootstrap 5.3 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    
+    <!-- Custom Stylesheet -->
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+    
+    {% block extra_head %}{% endblock %}
+</head>
+<body>
+
+    <!-- 1. Top Corporate Announcement Bar -->
+    <div class="announcement-bar">
+        <div class="container d-flex justify-content-between align-items-center flex-wrap gap-2">
+            <div>
+                <i class="bi bi-shield-lock-fill text-info me-1"></i>
+                <span class="fw-semibold">Corporate Partner Privilege:</span> Up to 45% Subsidized Employee Pricing Across Flagship Workstations & Tech.
+            </div>
+            <div class="d-flex align-items-center gap-3">
+                {% if user.is_authenticated %}
+                    {% if user_profile.is_verified %}
+                        <span class="status-pill-approved">
+                            <i class="bi bi-patch-check-fill"></i> {{ user_profile.company_name }} (Verified)
+                        </span>
+                    {% else %}
+                        <span class="status-pill-pending">
+                            <i class="bi bi-hourglass-split"></i> {{ user_profile.company_name }} (Verification Pending)
+                        </span>
+                    {% endif %}
+                {% else %}
+                    <span class="status-pill-guest">
+                        <i class="bi bi-building-lock"></i> Corporate Employee Portal
+                    </span>
+                    <a href="{% url 'accounts:register' %}">Verify Work Email &rarr;</a>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- 2. Main Sticky Navigation Bar -->
+    <nav class="navbar navbar-expand-lg main-navbar">
+        <div class="container">
+            <!-- Brand Logo -->
+            <a class="navbar-brand-perkcart" href="{% url 'core:home' %}">
+                <div class="logo-icon">
+                    <i class="bi bi-bag-check-fill"></i>
+                </div>
+                <span>PerkCart</span>
+                <span class="logo-tag">Corporate</span>
+            </a>
+
+            <!-- Mobile Toggler -->
+            <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse" data-bs-target="#perkcartNavbar" aria-controls="perkcartNavbar" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+
+            <!-- Navbar Links -->
+            <div class="collapse navbar-collapse" id="perkcartNavbar">
+                <ul class="navbar-nav me-auto mb-2 mb-lg-0 ms-lg-3">
+                    <!-- Categories Dropdown -->
+                    <li class="nav-item dropdown">
+                        <a class="nav-link nav-link-custom dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                            <i class="bi bi-grid-fill me-1 text-primary"></i> Categories
+                        </a>
+                        <ul class="dropdown-menu shadow-sm border-0 rounded-3 py-2">
+                            <li><a class="dropdown-item fw-semibold" href="{% url 'products:product_list' %}"><i class="bi bi-stars me-2 text-warning"></i>All Corporate Hardware</a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            {% for cat in nav_categories %}
+                            <li>
+                                <a class="dropdown-item py-2 d-flex align-items-center" href="{% url 'products:product_list' %}?category={{ cat.slug }}">
+                                    <i class="bi {{ cat.icon }} me-2 text-primary"></i> {{ cat.name }}
+                                </a>
+                            </li>
+                            {% endfor %}
+                        </ul>
+                    </li>
+
+                    <li class="nav-item">
+                        <a class="nav-link nav-link-custom" href="{% url 'products:product_list' %}">Explore Products</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link nav-link-custom position-relative" href="{% url 'products:offers' %}">
+                            Offers & Coupons
+                            <span class="badge bg-danger rounded-pill ms-1" style="font-size: 0.65rem;">Active</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link nav-link-custom" href="{% url 'faq:faq_list' %}">Help & FAQs</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link nav-link-custom" href="{% url 'troubleshooting:error_list' %}">Troubleshooting</a>
+                    </li>
+                </ul>
+
+                <!-- Global Search Box -->
+                <form class="nav-search-box me-lg-3 my-2 my-lg-0" action="{% url 'core:global_search' %}" method="GET">
+                    <i class="bi bi-search nav-search-icon"></i>
+                    <input class="form-control nav-search-input" type="search" name="q" placeholder="Search laptops, specs, error codes..." aria-label="Search" value="{{ request.GET.q|default:'' }}">
+                </form>
+
+                <!-- Right Action Icons & Auth -->
+                <div class="d-flex align-items-center gap-2 mt-2 mt-lg-0">
+                    <!-- Wishlist Icon -->
+                    <a href="{% url 'products:wishlist' %}" class="btn btn-light position-relative rounded-circle p-2 text-dark" title="My Wishlist">
+                        <i class="bi bi-heart fs-6"></i>
+                        <span id="nav-wishlist-count" class="badge-counter" style="{% if wishlist_count == 0 %}display:none;{% endif %}">{{ wishlist_count }}</span>
+                    </a>
+
+                    <!-- Cart Icon -->
+                    <a href="{% url 'cart:cart_detail' %}" class="btn btn-light position-relative rounded-circle p-2 text-dark" title="Corporate Cart">
+                        <i class="bi bi-cart3 fs-6"></i>
+                        <span id="nav-cart-count" class="badge-counter" style="{% if cart_count == 0 %}display:none;{% endif %}">{{ cart_count }}</span>
+                    </a>
+
+                    <!-- User Account Dropdown -->
+                    {% if user.is_authenticated %}
+                        <div class="dropdown ms-1">
+                            <button class="btn btn-corp-outline dropdown-toggle d-flex align-items-center gap-2 py-1 px-3" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                <i class="bi bi-person-circle fs-6 text-primary"></i>
+                                <span class="d-none d-sm-inline fw-semibold">{{ user.first_name|default:user.username }}</span>
+                            </button>
+                            <ul class="dropdown-menu dropdown-menu-end shadow-sm border-0 rounded-3 py-2">
+                                <li class="px-3 py-2 border-bottom">
+                                    <div class="fw-bold text-dark">{{ user.get_full_name|default:user.username }}</div>
+                                    <div class="small text-muted">{{ user.email }}</div>
+                                    <div class="small text-primary fw-semibold">{{ user_profile.company_name }}</div>
+                                </li>
+                                <li><a class="dropdown-item py-2" href="{% url 'accounts:profile' %}"><i class="bi bi-person-badge me-2 text-secondary"></i>Employee Profile</a></li>
+                                <li><a class="dropdown-item py-2" href="{% url 'cart:order_list' %}"><i class="bi bi-box-seam me-2 text-secondary"></i>My Orders & Tracking</a></li>
+                                <li><a class="dropdown-item py-2" href="{% url 'products:wishlist' %}"><i class="bi bi-heart me-2 text-secondary"></i>Saved Wishlist</a></li>
+                                {% if user.is_staff %}
+                                    <li><hr class="dropdown-divider"></li>
+                                    <li><h6 class="dropdown-header text-uppercase" style="font-size: 0.7rem;">Staff / Demo Controls</h6></li>
+                                    <li><a class="dropdown-item py-2 text-primary" href="{% url 'accounts:admin_verifications' %}"><i class="bi bi-person-check me-2"></i>Verify Employees</a></li>
+                                    <li><a class="dropdown-item py-2 text-warning" href="{% url 'troubleshooting:simulate_error' %}"><i class="bi bi-bug me-2"></i>Simulate Error Trigger</a></li>
+                                    <li><a class="dropdown-item py-2" href="{% url 'admin:index' %}" target="_blank"><i class="bi bi-speedometer2 me-2"></i>Django Admin</a></li>
+                                {% endif %}
+                                <li><hr class="dropdown-divider"></li>
+                                <li><a class="dropdown-item py-2 text-danger" href="{% url 'accounts:logout' %}"><i class="bi bi-box-arrow-right me-2"></i>Secure Sign Out</a></li>
+                            </ul>
+                        </div>
+                    {% else %}
+                        <a href="{% url 'accounts:login' %}" class="btn btn-corp-outline ms-2">Sign In</a>
+                        <a href="{% url 'accounts:register' %}" class="btn btn-corp-primary">Register</a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- 3. Dismissible Alerts & Messages -->
+    <div class="container mt-3">
+        {% if messages %}
+            {% for message in messages %}
+                <div class="alert alert-{{ message.tags|default:'info' }} alert-dismissible fade show rounded-3 shadow-sm d-flex align-items-center gap-2" role="alert">
+                    {% if message.tags == 'error' %}
+                        <i class="bi bi-exclamation-triangle-fill text-danger fs-5"></i>
+                    {% elif message.tags == 'success' %}
+                        <i class="bi bi-check-circle-fill text-success fs-5"></i>
+                    {% else %}
+                        <i class="bi bi-info-circle-fill text-primary fs-5"></i>
+                    {% endif %}
+                    <div>{{ message }}</div>
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            {% endfor %}
+        {% endif %}
+    </div>
+
+    <!-- 4. Main Body Content -->
+    <main class="py-4">
+        {% block content %}{% endblock %}
+    </main>
+
+    <!-- 5. Floating AI Assistant Widget Button -->
+    <button class="ai-floating-btn" type="button" data-bs-toggle="offcanvas" data-bs-target="#aiAssistantOffcanvas" aria-controls="aiAssistantOffcanvas" title="Ask PerkCart AI Assistant">
+        <span class="pulse-ring"></span>
+        <i class="bi bi-robot"></i>
+    </button>
+
+    <!-- 6. AI Assistant Off-Canvas Slide Drawer -->
+    <div class="offcanvas offcanvas-end shadow-lg border-0" tabindex="-1" id="aiAssistantOffcanvas" aria-labelledby="aiAssistantOffcanvasLabel" style="width: 440px; max-width: 95vw;">
+        <div class="offcanvas-header bg-dark text-white border-bottom border-secondary">
+            <div class="d-flex align-items-center gap-2">
+                <div class="bg-primary text-white rounded-circle p-2 d-flex align-items-center justify-content-center" style="width: 36px; height: 36px;">
+                    <i class="bi bi-robot fs-5"></i>
+                </div>
+                <div>
+                    <h6 class="offcanvas-title mb-0 fw-bold" id="aiAssistantOffcanvasLabel">PerkCart AI Assistant</h6>
+                    <span class="small text-info" style="font-size: 0.72rem;">Grounded Corporate Retrieval Engine</span>
+                </div>
+            </div>
+            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+        </div>
+        <div class="offcanvas-body p-0 d-flex flex-column" style="height: 100%;">
+            <!-- Suggested prompt chips -->
+            <div class="p-3 bg-light border-bottom">
+                <div class="small fw-bold text-muted mb-2" style="font-size: 0.75rem;">SUGGESTED SHOPPING PROMPTS:</div>
+                <div class="d-flex flex-wrap gap-1">
+                    <span class="badge bg-white text-dark border suggested-chip" style="cursor: pointer;" data-prompt="Find laptops under ₹1,00,000">💻 Laptops under ₹1 Lakh</span>
+                    <span class="badge bg-white text-dark border suggested-chip" style="cursor: pointer;" data-prompt="Compare PerkBook Ultra 16 Pro and ThinkPro X1">⚖️ Compare Ultrabooks</span>
+                    <span class="badge bg-white text-dark border suggested-chip" style="cursor: pointer;" data-prompt="What corporate coupons are active?">🏷️ Active Coupons</span>
+                    <span class="badge bg-white text-dark border suggested-chip" style="cursor: pointer;" data-prompt="What does error CART-001 mean?">🛠️ Fix CART-001</span>
+                </div>
+            </div>
+
+            <!-- Chat Messages Container -->
+            <div id="chat-widget-messages" class="chat-messages-area">
+                <div class="chat-bubble assistant">
+                    Hello {{ user.first_name|default:'there' }}! 👋 I am your <strong>PerkCart AI Assistant</strong>.
+                    <br><br>
+                    I can help you discover corporate laptops, compare hardware specifications, find active discount codes, explain employee verification, troubleshoot errors, and track orders.
+                    <div class="mt-2 text-muted small" style="font-size: 0.72rem;">
+                        <i class="bi bi-shield-check text-success"></i> <em>Grounded in PerkCart's verified database.</em>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Chat Input Area -->
+            <div class="p-3 border-top bg-white">
+                <div class="input-group">
+                    <input type="text" id="chat-widget-input" class="form-control" placeholder="Ask about products, specs, coupons..." maxlength="500">
+                    <button class="btn btn-corp-primary px-3" type="button" id="chat-widget-send">
+                        <i class="bi bi-send-fill"></i>
+                    </button>
+                </div>
+                <div class="d-flex justify-content-between align-items-center mt-2">
+                    <span class="text-muted" style="font-size: 0.7rem;">Enter to send • Real-time database grounding</span>
+                    <a href="{% url 'assistant:assistant' %}" class="small text-primary text-decoration-none fw-semibold">Open Full Chat &rarr;</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 7. Premium Corporate Footer -->
+    <footer class="footer-corporate">
+        <div class="container">
+            <div class="row g-4">
+                <div class="col-lg-4 col-md-6">
+                    <div class="d-flex align-items-center gap-2 mb-3">
+                        <div class="logo-icon bg-primary text-white rounded p-2" style="width: 32px; height: 32px; display: flex; align-items: center; justify-content: center;">
+                            <i class="bi bi-bag-check-fill"></i>
+                        </div>
+                        <span class="fs-5 fw-bold text-white">PerkCart Corporate</span>
+                    </div>
+                    <p class="small text-muted mb-4">
+                        PerkCart is an exclusive corporate employee procurement portal inspired by Samsung's corporate shopping experience. Delivering subsidized prices on enterprise computing, smartphones, displays, and smart office equipment.
+                    </p>
+                    <div class="d-flex gap-2">
+                        <span class="badge bg-secondary p-2"><i class="bi bi-shield-check"></i> Enterprise Verified</span>
+                        <span class="badge bg-secondary p-2"><i class="bi bi-credit-card-2-front"></i> Payroll Deduction</span>
+                    </div>
+                </div>
+
+                <div class="col-lg-2 col-md-3 col-6">
+                    <h6>Product Catalog</h6>
+                    <ul class="list-unstyled d-flex flex-column gap-2">
+                        {% for cat in nav_categories|slice:":5" %}
+                        <li><a href="{% url 'products:product_list' %}?category={{ cat.slug }}">{{ cat.name }}</a></li>
+                        {% endfor %}
+                    </ul>
+                </div>
+
+                <div class="col-lg-2 col-md-3 col-6">
+                    <h6>Employee Services</h6>
+                    <ul class="list-unstyled d-flex flex-column gap-2">
+                        <li><a href="{% url 'accounts:profile' %}">User Profile</a></li>
+                        <li><a href="{% url 'accounts:submit_verification' %}">Employee Verification</a></li>
+                        <li><a href="{% url 'cart:order_list' %}">Order History</a></li>
+                        <li><a href="{% url 'products:offers' %}">Corporate Offers</a></li>
+                        <li><a href="{% url 'products:wishlist' %}">My Wishlist</a></li>
+                    </ul>
+                </div>
+
+                <div class="col-lg-2 col-md-3 col-6">
+                    <h6>Help & Support</h6>
+                    <ul class="list-unstyled d-flex flex-column gap-2">
+                        <li><a href="{% url 'faq:faq_list' %}">FAQ Knowledgebase</a></li>
+                        <li><a href="{% url 'troubleshooting:error_list' %}">Error Code Guide</a></li>
+                        <li><a href="{% url 'assistant:assistant' %}">AI Shopping Assistant</a></li>
+                        <li><a href="{% url 'core:feedback' %}">Submit Feedback</a></li>
+                        <li><a href="{% url 'core:system_status' %}">Operational Status</a></li>
+                    </ul>
+                </div>
+
+                <div class="col-lg-2 col-md-3 col-6">
+                    <h6>Demonstration</h6>
+                    <ul class="list-unstyled d-flex flex-column gap-2">
+                        <li><a href="{% url 'core:health_check' %}" target="_blank">Health Check API</a></li>
+                        <li><a href="{% url 'troubleshooting:simulate_error' %}">Error Simulator</a></li>
+                        <li><a href="{% url 'accounts:admin_verifications' %}">Verification Admin</a></li>
+                        <li><a href="{% url 'admin:index' %}" target="_blank">Django Admin</a></li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="footer-bottom d-flex flex-wrap justify-content-between align-items-center gap-3">
+                <div class="text-muted">
+                    &copy; 2026 <strong>PerkCart</strong>. Built with Python, Django & SQLite for academic evaluation.
+                </div>
+                <div class="d-flex gap-3 text-muted">
+                    <span class="text-success"><i class="bi bi-circle-fill" style="font-size: 0.5rem;"></i> All Systems Operational</span>
+                    <span>v1.0.0</span>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Bootstrap 5.3 JS Bundle -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- Custom Main JS -->
+    <script src="{% static 'js/main.js' %}"></script>
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

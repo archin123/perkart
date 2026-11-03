@@ -1,0 +1,123 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Corporate Error Code Knowledgebase & Troubleshooting — PerkCart{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="text-center py-4 mb-4">
+        <span class="badge bg-danger px-3 py-2 text-uppercase mb-2">Diagnostic Resolution Center</span>
+        <h2 class="fw-extrabold text-dark">Error Code Troubleshooting Guide</h2>
+        <p class="text-muted max-w-md mx-auto">
+            Look up structured system diagnostic codes, identify root causes, and follow verified recovery workflows.
+        </p>
+
+        <!-- Search Bar -->
+        <form method="GET" action="{% url 'troubleshooting:error_list' %}" class="mx-auto mt-3" style="max-width: 540px;">
+            <div class="input-group input-group-lg shadow-sm rounded-pill overflow-hidden border">
+                <span class="input-group-text bg-white border-0 ps-3 text-muted"><i class="bi bi-search"></i></span>
+                <input type="text" name="q" class="form-control border-0" placeholder="Search by error code (e.g. AUTH-001, CART-001) or issue..." value="{{ query }}">
+                <button type="submit" class="btn btn-corp-primary px-4 fw-bold">Diagnose</button>
+            </div>
+        </form>
+    </div>
+
+    <!-- Category & Severity Filter Chips -->
+    <div class="p-3 bg-light rounded-4 border mb-4">
+        <form method="GET" class="row g-2 align-items-center">
+            {% if query %}<input type="hidden" name="q" value="{{ query }}">{% endif %}
+
+            <div class="col-md-5">
+                <label class="form-label small fw-bold text-muted mb-1">Filter by Category</label>
+                <select name="category" class="form-select form-select-sm" onchange="this.form.submit()">
+                    <option value="">All Categories (Authentication, Cart, Payment, etc.)</option>
+                    {% for cat_val, cat_label in categories %}
+                        <option value="{{ cat_val }}" {% if selected_category == cat_val %}selected{% endif %}>{{ cat_label }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="col-md-5">
+                <label class="form-label small fw-bold text-muted mb-1">Filter by Severity Level</label>
+                <select name="severity" class="form-select form-select-sm" onchange="this.form.submit()">
+                    <option value="">All Severities (Low, Medium, High, Critical)</option>
+                    {% for sev_val, sev_label in severities %}
+                        <option value="{{ sev_val }}" {% if selected_severity == sev_val %}selected{% endif %}>{{ sev_label }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="col-md-2 pt-md-3">
+                <a href="{% url 'troubleshooting:error_list' %}" class="btn btn-outline-secondary btn-sm w-100">Reset Filters</a>
+            </div>
+        </form>
+    </div>
+
+    <!-- Admin Demo Action Strip -->
+    {% if user.is_staff %}
+    <div class="p-3 bg-warning-subtle border border-warning rounded-3 mb-4 d-flex justify-content-between align-items-center flex-wrap gap-2">
+        <div class="d-flex align-items-center gap-2">
+            <i class="bi bi-shield-exclamation fs-4 text-warning"></i>
+            <div>
+                <strong class="text-dark">Evaluator / Administrator Demo Action:</strong>
+                <span class="small text-muted d-block">Test safe error triggering and observe real-time AppErrorLog recording.</span>
+            </div>
+        </div>
+        <a href="{% url 'troubleshooting:simulate_error' %}" class="btn btn-warning btn-sm fw-bold">
+            <i class="bi bi-bug me-1"></i> Open Error Simulator &rarr;
+        </a>
+    </div>
+    {% endif %}
+
+    <!-- Error Codes Grid -->
+    <div class="row g-4 mb-5">
+        {% for error in error_codes %}
+        <div class="col-md-6 col-lg-4">
+            <div class="card h-100 border rounded-4 shadow-sm overflow-hidden d-flex flex-column">
+                <div class="card-header bg-white p-3 border-bottom d-flex justify-content-between align-items-center">
+                    <span class="badge bg-dark font-monospace fw-bold fs-6">{{ error.code }}</span>
+                    {% if error.severity == 'LOW' %}
+                        <span class="badge severity-low">Low</span>
+                    {% elif error.severity == 'MEDIUM' %}
+                        <span class="badge severity-medium">Medium</span>
+                    {% elif error.severity == 'HIGH' %}
+                        <span class="badge severity-high">High</span>
+                    {% else %}
+                        <span class="badge severity-critical">Critical</span>
+                    {% endif %}
+                </div>
+
+                <div class="card-body p-4 d-flex flex-column flex-grow-1">
+                    <span class="small text-uppercase fw-bold text-primary mb-1">{{ error.get_category_display }}</span>
+                    <h5 class="fw-bold text-dark mb-2">{{ error.title }}</h5>
+                    <p class="text-muted small mb-3 flex-grow-1">{{ error.description|truncatewords:16 }}</p>
+
+                    <div class="p-2 bg-light rounded-3 border mb-3">
+                        <div class="small fw-bold text-dark mb-1"><i class="bi bi-tools text-primary me-1"></i> Quick Step:</div>
+                        <div class="small text-muted text-truncate">{{ error.steps_list.0 }}</div>
+                    </div>
+
+                    <div class="d-flex gap-2 mt-auto">
+                        <a href="{% url 'troubleshooting:error_detail' code=error.code %}" class="btn btn-corp-primary btn-sm flex-grow-1">
+                            Full Resolution Guide &rarr;
+                        </a>
+                        {% if error.action_url %}
+                            <a href="{{ error.action_url }}" class="btn btn-corp-outline btn-sm" title="{{ error.action_label }}">
+                                <i class="bi bi-box-arrow-up-right"></i>
+                            </a>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% empty %}
+        <div class="col-12 text-center py-5 bg-light rounded-4 border">
+            <i class="bi bi-check2-circle fs-1 text-success mb-2 d-block"></i>
+            <h5 class="fw-bold">No Matching Error Records</h5>
+            <p class="text-muted small mb-3">No system error records matched your filter. All systems functioning normally.</p>
+            <a href="{% url 'troubleshooting:error_list' %}" class="btn btn-corp-primary btn-sm">Clear Error Search</a>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}

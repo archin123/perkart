@@ -1,0 +1,124 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Diagnostic Guide: {{ error_obj.code }} — PerkCart{% endblock %}
+
+{% block content %}
+<div class="container">
+    <nav aria-label="breadcrumb" class="mb-3">
+        <ol class="breadcrumb small">
+            <li class="breadcrumb-item"><a href="{% url 'core:home' %}" class="text-decoration-none">Home</a></li>
+            <li class="breadcrumb-item"><a href="{% url 'troubleshooting:error_list' %}" class="text-decoration-none">Troubleshooting Guide</a></li>
+            <li class="breadcrumb-item active" aria-current="page">{{ error_obj.code }}</li>
+        </ol>
+    </nav>
+
+    <!-- Error Summary Header -->
+    <div class="card border rounded-4 shadow-sm p-4 mb-4">
+        <div class="d-flex justify-content-between align-items-start flex-wrap gap-2 mb-3">
+            <div>
+                <div class="d-flex align-items-center gap-2 mb-1">
+                    <span class="badge bg-dark font-monospace fs-5 px-3 py-1">{{ error_obj.code }}</span>
+                    {% if error_obj.severity == 'LOW' %}
+                        <span class="badge severity-low px-2 py-1">Low Severity</span>
+                    {% elif error_obj.severity == 'MEDIUM' %}
+                        <span class="badge severity-medium px-2 py-1">Medium Severity</span>
+                    {% elif error_obj.severity == 'HIGH' %}
+                        <span class="badge severity-high px-2 py-1">High Severity</span>
+                    {% else %}
+                        <span class="badge severity-critical px-2 py-1">Critical Severity</span>
+                    {% endif %}
+                </div>
+                <h2 class="fw-bold text-dark mb-1">{{ error_obj.title }}</h2>
+                <span class="text-primary fw-semibold small text-uppercase">{{ error_obj.get_category_display }}</span>
+            </div>
+
+            {% if error_obj.action_url %}
+                <a href="{{ error_obj.action_url }}" class="btn btn-corp-primary btn-lg px-4 shadow-sm">
+                    {{ error_obj.action_label }} <i class="bi bi-arrow-right ms-1"></i>
+                </a>
+            {% endif %}
+        </div>
+
+        <p class="lead fs-6 text-secondary mb-0" style="line-height: 1.7;">
+            {{ error_obj.description }}
+        </p>
+    </div>
+
+    <div class="row g-4 mb-5">
+        <!-- Root Causes & Step-by-Step Instructions -->
+        <div class="col-lg-8">
+            <!-- 1. Possible Root Causes -->
+            <div class="card border rounded-4 p-4 shadow-sm mb-4">
+                <h5 class="fw-bold mb-3 text-dark"><i class="bi bi-search text-primary me-2"></i> Likely Root Causes</h5>
+                <ul class="list-group list-group-flush">
+                    {% for cause in error_obj.causes_list %}
+                    <li class="list-group-item px-0 py-2 d-flex align-items-start gap-2 border-0">
+                        <i class="bi bi-dot text-danger fs-4 mt-n2"></i>
+                        <span>{{ cause }}</span>
+                    </li>
+                    {% endfor %}
+                </ul>
+            </div>
+
+            <!-- 2. Step-by-Step Resolution -->
+            <div class="card border rounded-4 p-4 shadow-sm mb-4">
+                <h5 class="fw-bold mb-3 text-dark"><i class="bi bi-tools text-success me-2"></i> Verified Troubleshooting Instructions</h5>
+                <div class="d-flex flex-column gap-2">
+                    {% for step in error_obj.steps_list %}
+                    <div class="p-3 bg-light rounded-3 border">
+                        <span class="text-dark fw-medium">{{ step }}</span>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <!-- 3. Preventative Best Practices -->
+            <div class="card border rounded-4 p-4 shadow-sm">
+                <h5 class="fw-bold mb-3 text-dark"><i class="bi bi-shield-check text-info me-2"></i> Preventive Recommendations</h5>
+                <ul class="list-group list-group-flush">
+                    {% for rec in error_obj.recommendations_list %}
+                    <li class="list-group-item px-0 py-2 d-flex align-items-start gap-2 border-0">
+                        <i class="bi bi-check-circle-fill text-success mt-1"></i>
+                        <span>{{ rec }}</span>
+                    </li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </div>
+
+        <!-- Right Sidebar: Interactive AI Help & Related Errors -->
+        <div class="col-lg-4">
+            <!-- Ask AI about this error -->
+            <div class="card border rounded-4 p-4 shadow-sm bg-light mb-4">
+                <div class="d-flex align-items-center gap-2 mb-2 text-primary">
+                    <i class="bi bi-robot fs-4"></i>
+                    <h6 class="fw-bold mb-0">Ask AI About {{ error_obj.code }}</h6>
+                </div>
+                <p class="small text-muted mb-3">Our grounded assistant can guide you through resolving this specific diagnostic code step-by-step.</p>
+                <button type="button" class="btn btn-corp-primary btn-sm w-100 suggested-chip" data-prompt="How do I troubleshoot error code {{ error_obj.code }} ({{ error_obj.title }})?" data-bs-toggle="offcanvas" data-bs-target="#aiAssistantOffcanvas">
+                    Troubleshoot with AI &rarr;
+                </button>
+            </div>
+
+            <!-- Related Errors in Same Domain -->
+            {% if related_errors %}
+            <div class="card border rounded-4 p-4 shadow-sm">
+                <h6 class="fw-bold mb-3 pb-2 border-bottom">Related {{ error_obj.get_category_display }} Errors</h6>
+                <div class="d-flex flex-column gap-2">
+                    {% for rel in related_errors %}
+                    <a href="{% url 'troubleshooting:error_detail' code=rel.code %}" class="p-2 bg-light rounded-3 border text-decoration-none text-dark d-flex justify-content-between align-items-center hover-shadow">
+                        <div>
+                            <span class="badge bg-secondary font-monospace small me-1">{{ rel.code }}</span>
+                            <span class="small fw-semibold">{{ rel.title }}</span>
+                        </div>
+                        <i class="bi bi-chevron-right text-muted small"></i>
+                    </a>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

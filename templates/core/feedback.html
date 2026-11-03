@@ -1,0 +1,115 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Corporate Feedback & Suggestions — PerkCart{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="row g-4">
+        <!-- Feedback Form -->
+        <div class="col-lg-7">
+            <div class="card border rounded-4 p-4 p-md-5 shadow-sm">
+                <div class="d-flex align-items-center gap-2 mb-2 text-primary">
+                    <i class="bi bi-chat-heart-fill fs-3"></i>
+                    <h3 class="fw-bold text-dark mb-0">Employee Experience Feedback</h3>
+                </div>
+                <p class="text-muted small mb-4">
+                    We continuously refine our corporate catalog, subsidy agreements, and delivery timelines based on employee feedback.
+                </p>
+
+                <form method="POST" action="{% url 'core:feedback' %}">
+                    {% csrf_token %}
+
+                    <div class="row g-3 mb-3">
+                        <div class="col-md-6">
+                            <label class="form-label small fw-bold">Your Name *</label>
+                            <input type="text" name="name" class="form-control" value="{{ form_data.name|default:'' }}" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label small fw-bold">Work Email *</label>
+                            <input type="email" name="email" class="form-control" value="{{ form_data.email|default:'' }}" required>
+                        </div>
+                    </div>
+
+                    <div class="row g-3 mb-3">
+                        <div class="col-md-6">
+                            <label class="form-label small fw-bold">Company / Employer</label>
+                            <input type="text" name="company_name" class="form-control" value="{{ form_data.company_name|default:'' }}" placeholder="e.g. Apex Global Technologies">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label small fw-bold">Feedback Category *</label>
+                            <select name="category" class="form-select">
+                                {% for val, label in categories %}
+                                    <option value="{{ val }}">{{ label }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold">Overall Satisfaction Rating *</label>
+                        <select name="rating" class="form-select">
+                            <option value="5" selected>⭐⭐⭐⭐⭐ 5 - Highly Satisfied</option>
+                            <option value="4">⭐⭐⭐⭐ 4 - Satisfied</option>
+                            <option value="3">⭐⭐⭐ 3 - Neutral</option>
+                            <option value="2">⭐⭐ 2 - Needs Improvement</option>
+                            <option value="1">⭐ 1 - Unsatisfied</option>
+                        </select>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold">Subject</label>
+                        <input type="text" name="subject" class="form-control" placeholder="Brief summary of your feedback">
+                    </div>
+
+                    <div class="mb-4">
+                        <label class="form-label small fw-bold">Detailed Feedback & Suggestions *</label>
+                        <textarea name="message" class="form-control" rows="4" placeholder="Tell us about your shopping experience, hardware requests, or suggestions..." required></textarea>
+                    </div>
+
+                    <button type="submit" class="btn btn-corp-primary btn-lg w-100 fw-bold py-3 shadow-sm">
+                        Submit Corporate Feedback &rarr;
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        <!-- Right: Recent Employee Testimonials & Operational Metrics -->
+        <div class="col-lg-5">
+            <div class="card border rounded-4 p-4 shadow-sm bg-light mb-4">
+                <h5 class="fw-bold mb-3"><i class="bi bi-stars text-warning me-2"></i> Employee Satisfaction Score</h5>
+                <div class="d-flex align-items-baseline gap-2 mb-2">
+                    <span class="fs-1 fw-bold text-dark">4.9</span>
+                    <span class="text-muted">/ 5.0</span>
+                    <span class="badge bg-success ms-2">98% Positive</span>
+                </div>
+                <p class="small text-muted mb-0">Over 1,200 verified corporate reviews across partner enterprises in India.</p>
+            </div>
+
+            <!-- Recent Reviews -->
+            <h6 class="fw-bold mb-3"><i class="bi bi-chat-quote-fill text-primary me-2"></i> Verified Partner Testimonials</h6>
+            <div class="d-flex flex-column gap-3">
+                {% for fb in feedbacks %}
+                <div class="card border rounded-4 p-3 shadow-sm bg-white">
+                    <div class="d-flex justify-content-between align-items-center mb-1">
+                        <span class="fw-bold small text-dark">{{ fb.name }}</span>
+                        <span class="text-warning small" style="font-size: 0.75rem;">
+                            {% if fb.rating == 5 %}⭐⭐⭐⭐⭐{% elif fb.rating == 4 %}⭐⭐⭐⭐{% else %}⭐⭐⭐{% endif %}
+                        </span>
+                    </div>
+                    <div class="text-muted small mb-2" style="font-size: 0.75rem;">{{ fb.company_name|default:'Corporate Partner' }} • {{ fb.get_category_display }}</div>
+                    <p class="small text-dark mb-2">"{{ fb.message }}"</p>
+                    {% if fb.admin_response %}
+                        <div class="p-2 bg-light rounded-2 border small" style="font-size: 0.75rem;">
+                            <strong class="text-primary">PerkCart Team:</strong> {{ fb.admin_response }}
+                        </div>
+                    {% endif %}
+                </div>
+                {% empty %}
+                <p class="text-muted small">No verified feedback items to display yet.</p>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

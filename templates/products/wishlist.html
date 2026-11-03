@@ -1,0 +1,62 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}My Saved Wishlist — PerkCart{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="d-flex justify-content-between align-items-center mb-4 pb-3 border-bottom">
+        <div>
+            <h2 class="fw-bold mb-1">My Saved Wishlist</h2>
+            <p class="text-muted small mb-0">Equipment saved for future corporate procurement or stipend approvals.</p>
+        </div>
+        <a href="{% url 'products:product_list' %}" class="btn btn-corp-outline btn-sm">
+            Continue Shopping
+        </a>
+    </div>
+
+    {% if wishlist_items %}
+        <div class="row g-4">
+            {% for item in wishlist_items %}
+            <div class="col-md-6 col-lg-3">
+                <div class="product-card">
+                    <div class="product-image-container">
+                        <a href="{% url 'products:product_detail' slug=item.product.slug %}" class="w-100 h-100 d-flex align-items-center justify-content-center">
+                            <img src="{{ item.product.image_url }}" alt="{{ item.product.name }}">
+                        </a>
+                    </div>
+                    <div class="product-card-body">
+                        <span class="product-category-tag">{{ item.product.category.name }}</span>
+                        <a href="{% url 'products:product_detail' slug=item.product.slug %}" class="product-title" title="{{ item.product.name }}">
+                            {{ item.product.name }}
+                        </a>
+                        <div class="product-pricing">
+                            <div class="corp-price">₹{{ item.product.corporate_price|floatformat:0 }}</div>
+                            <span class="savings-tag">Save {{ item.product.discount_percent }}%</span>
+                            <div class="d-flex gap-2 mt-3">
+                                <form action="{% url 'cart:cart_add' product_id=item.product.id %}" method="POST" class="flex-grow-1 m-0">
+                                    {% csrf_token %}
+                                    <button type="submit" class="btn btn-corp-primary btn-sm w-100">
+                                        Move to Cart
+                                    </button>
+                                </form>
+                                <a href="{% url 'products:wishlist_toggle' product_id=item.product.id %}" class="btn btn-outline-danger btn-sm" title="Remove">
+                                    <i class="bi bi-trash"></i>
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <div class="text-center py-5 bg-light rounded-4 border">
+            <i class="bi bi-heart fs-1 text-muted mb-3 d-block"></i>
+            <h5 class="fw-bold">Your Wishlist is Empty</h5>
+            <p class="text-muted small mb-4">Click the heart icon on any hardware product to save it here for later review.</p>
+            <a href="{% url 'products:product_list' %}" class="btn btn-corp-primary btn-sm">Explore Catalog</a>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}
