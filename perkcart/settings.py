@@ -99,7 +99,7 @@ WSGI_APPLICATION = 'perkcart.wsgi.application'
 # Database
 # Default: SQLite3 for convenient local college development.
 # Supports PostgreSQL in production if DATABASE_URL environment variable is provided.
-DATABASE_URL = os.getenv('DATABASE_URL', '')
+DATABASE_URL = os.getenv('DATABASE_URL') or os.getenv('Database_url') or os.getenv('database_url') or ''
 if DATABASE_URL and (DATABASE_URL.startswith('postgres://') or DATABASE_URL.startswith('postgresql://')):
     try:
         import dj_database_url
@@ -205,7 +205,7 @@ LOGIN_REDIRECT_URL = 'core:home'
 LOGOUT_REDIRECT_URL = 'core:home'
 
 # AI Assistant Configuration
-GEMINI_API_KEY = os.getenv('GEMINI_API_KEY', '')
+GEMINI_API_KEY = os.getenv('GEMINI_API_KEY') or os.getenv('API_Key') or os.getenv('API_KEY') or ''
 OPENAI_API_KEY = os.getenv('OPENAI_API_KEY', '')
 
 # Production Security Headers (Active when DEBUG is False)
