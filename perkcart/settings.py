@@ -143,18 +143,21 @@ elif DATABASE_URL and (DATABASE_URL.startswith('mongodb://') or DATABASE_URL.sta
         )
     except Exception as e:
         print(f"Warning: Could not connect to MongoDB: {e}")
-    # Django relational ORM still requires a default SQL database for Auth, Admin, etc.
+    # Fallback SQLite path: /tmp/db.sqlite3 on Vercel (writable), BASE_DIR / db.sqlite3 locally
+    default_db_path = Path('/tmp') / 'db.sqlite3' if os.getenv('VERCEL') else BASE_DIR / 'db.sqlite3'
     DATABASES = {
         'default': {
             'ENGINE': 'django.db.backends.sqlite3',
-            'NAME': BASE_DIR / 'db.sqlite3',
+            'NAME': default_db_path,
         }
     }
 else:
+    # Fallback SQLite path: /tmp/db.sqlite3 on Vercel (writable), BASE_DIR / db.sqlite3 locally
+    default_db_path = Path('/tmp') / 'db.sqlite3' if os.getenv('VERCEL') else BASE_DIR / 'db.sqlite3'
     DATABASES = {
         'default': {
             'ENGINE': 'django.db.backends.sqlite3',
-            'NAME': BASE_DIR / 'db.sqlite3',
+            'NAME': default_db_path,
         }
     }
 
