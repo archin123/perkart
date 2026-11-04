@@ -189,3 +189,14 @@ def system_status_view(request):
         'error_count': error_count,
         'current_time': timezone.now(),
     })
+
+
+def evaluation_rubric_view(request):
+    """
+    Dedicated evaluation dashboard displaying the 3 assessment categories:
+    1. Backend & Data (15 Marks)
+    2. Deployment & Security (15 Marks)
+    3. Monitoring & Feedback (5 Marks)
+    """
+    return render(request, 'core/evaluation_rubric.html')
+

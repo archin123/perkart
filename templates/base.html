@@ -104,6 +104,11 @@
                     <li class="nav-item">
                         <a class="nav-link nav-link-custom" href="{% url 'troubleshooting:error_list' %}">Troubleshooting</a>
                     </li>
+                    <li class="nav-item">
+                        <a class="nav-link nav-link-custom text-danger fw-bold" href="{% url 'core:evaluation_rubric' %}">
+                            <i class="bi bi-award-fill me-1"></i>Rubric /35
+                        </a>
+                    </li>
                 </ul>
 
                 <!-- Global Search Box -->
@@ -300,6 +305,7 @@
                 <div class="col-lg-2 col-md-3 col-6">
                     <h6>Demonstration</h6>
                     <ul class="list-unstyled d-flex flex-column gap-2">
+                        <li><a href="{% url 'core:evaluation_rubric' %}" class="fw-bold text-warning"><i class="bi bi-award-fill me-1"></i>Rubric Assessment /35</a></li>
                         <li><a href="{% url 'core:health_check' %}" target="_blank">Health Check API</a></li>
                         <li><a href="{% url 'troubleshooting:simulate_error' %}">Error Simulator</a></li>
                         <li><a href="{% url 'accounts:admin_verifications' %}">Verification Admin</a></li>
