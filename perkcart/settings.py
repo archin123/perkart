@@ -22,12 +22,12 @@ SECRET_KEY = os.getenv(
     'django-insecure-du4bs^!7p6u15@o*+$wpzi#d4do)+4^r)p@zm&2zat%cw0s4_!'
 )
 
+# Environment & Serverless Detection
+IS_PRODUCTION = bool(os.getenv('VERCEL') or os.getenv('VERCEL_ENV') or os.getenv('AWS_LAMBDA_FUNCTION_NAME') or not (BASE_DIR / '.env').exists())
+
 # SECURITY WARNING: don't run with debug turned on in production!
-# On Vercel, default to False to show custom branded error pages (404, 500)
-if os.getenv('VERCEL'):
-    DEBUG = os.getenv('DEBUG', 'False').lower() in ('true', '1', 'yes')
-else:
-    DEBUG = os.getenv('DEBUG', 'True').lower() in ('true', '1', 'yes')
+# Automatically False in production to render custom branded 404/500 error pages
+DEBUG = os.getenv('DEBUG', 'False' if IS_PRODUCTION else 'True').lower() in ('true', '1', 'yes')
 
 ALLOWED_HOSTS = [h.strip() for h in os.getenv('ALLOWED_HOSTS', '*').split(',') if h.strip()]
 if '.vercel.app' not in ALLOWED_HOSTS and '*' not in ALLOWED_HOSTS:
@@ -148,8 +148,8 @@ elif DATABASE_URL and (DATABASE_URL.startswith('mongodb://') or DATABASE_URL.sta
         )
     except Exception as e:
         print(f"Warning: Could not connect to MongoDB: {e}")
-    # Fallback SQLite path: /tmp/db.sqlite3 on Vercel (writable), BASE_DIR / db.sqlite3 locally
-    default_db_path = Path('/tmp') / 'db.sqlite3' if os.getenv('VERCEL') else BASE_DIR / 'db.sqlite3'
+    # Fallback SQLite path: /tmp/db.sqlite3 in production (writable), BASE_DIR / db.sqlite3 locally
+    default_db_path = Path('/tmp') / 'db.sqlite3' if IS_PRODUCTION else BASE_DIR / 'db.sqlite3'
     DATABASES = {
         'default': {
             'ENGINE': 'django.db.backends.sqlite3',
@@ -157,8 +157,8 @@ elif DATABASE_URL and (DATABASE_URL.startswith('mongodb://') or DATABASE_URL.sta
         }
     }
 else:
-    # Fallback SQLite path: /tmp/db.sqlite3 on Vercel (writable), BASE_DIR / db.sqlite3 locally
-    default_db_path = Path('/tmp') / 'db.sqlite3' if os.getenv('VERCEL') else BASE_DIR / 'db.sqlite3'
+    # Fallback SQLite path: /tmp/db.sqlite3 in production (writable), BASE_DIR / db.sqlite3 locally
+    default_db_path = Path('/tmp') / 'db.sqlite3' if IS_PRODUCTION else BASE_DIR / 'db.sqlite3'
     DATABASES = {
         'default': {
             'ENGINE': 'django.db.backends.sqlite3',
