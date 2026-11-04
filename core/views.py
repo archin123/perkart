@@ -149,9 +149,13 @@ def health_check_view(request):
 
     status_code = 200 if db_status == "connected" else 503
 
+    from django.conf import settings
     return JsonResponse({
         "status": "healthy" if db_status == "connected" else "unhealthy",
         "database": db_status,
+        "debug": settings.DEBUG,
+        "env_debug": os.getenv('DEBUG'),
+        "has_env": (settings.BASE_DIR / '.env').exists(),
         "timestamp": timezone.now().isoformat(),
         "service": "PerkCart Corporate Platform",
         "version": "1.0.0",

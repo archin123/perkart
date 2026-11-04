@@ -23,11 +23,20 @@ SECRET_KEY = os.getenv(
 )
 
 # Environment & Serverless Detection
-IS_PRODUCTION = bool(os.getenv('VERCEL') or os.getenv('VERCEL_ENV') or os.getenv('AWS_LAMBDA_FUNCTION_NAME') or not (BASE_DIR / '.env').exists())
+IS_PRODUCTION = bool(
+    os.getenv('VERCEL')
+    or os.getenv('VERCEL_ENV')
+    or os.getenv('LAMBDA_TASK_ROOT')
+    or os.getenv('AWS_LAMBDA_FUNCTION_NAME')
+    or str(BASE_DIR).startswith('/var/task')
+)
 
 # SECURITY WARNING: don't run with debug turned on in production!
-# Automatically False in production to render custom branded 404/500 error pages
-DEBUG = os.getenv('DEBUG', 'False' if IS_PRODUCTION else 'True').lower() in ('true', '1', 'yes')
+# On Vercel / Production, DEBUG is strictly False so branded custom 404/500 error pages render
+if IS_PRODUCTION:
+    DEBUG = False
+else:
+    DEBUG = os.getenv('DEBUG', 'True').lower() in ('true', '1', 'yes')
 
 ALLOWED_HOSTS = [h.strip() for h in os.getenv('ALLOWED_HOSTS', '*').split(',') if h.strip()]
 if '.vercel.app' not in ALLOWED_HOSTS and '*' not in ALLOWED_HOSTS:
