@@ -1,24 +1,49 @@
 {% extends 'base.html' %}
 {% load static %}
 
-{% block title %}Page Not Found — PerkCart{% endblock %}
+{% block title %}404 — Page Not Found | PerkCart Corporate Store{% endblock %}
 
 {% block content %}
-<div class="container py-5 text-center">
-    <div class="p-4 p-md-5 bg-light rounded-4 border max-w-md mx-auto shadow-sm" style="max-width: 580px;">
-        <div class="badge bg-secondary px-3 py-2 text-uppercase mb-3 font-monospace">404 NOT FOUND</div>
-        <h3 class="fw-bold text-dark mb-2">We Couldn't Find That Corporate Page</h3>
-        <p class="text-secondary mb-4">
-            The hardware item, order reference, or URL you requested does not exist or may have been moved.
-        </p>
+<div class="container py-5 my-4 text-center">
+    <div class="card border-0 shadow-sm rounded-4 mx-auto p-4 p-md-5" style="max-width: 620px; background-color: #ffffff;">
+        <div class="mb-3">
+            <span class="badge bg-primary-subtle text-primary border border-primary-subtle px-3 py-2 rounded-pill font-monospace fw-semibold">
+                <i class="bi bi-compass me-1"></i> ERROR CODE: 404 NOT FOUND
+            </span>
+        </div>
 
-        <div class="d-flex justify-content-center gap-3">
-            <a href="{% url 'products:product_list' %}" class="btn btn-corp-primary btn-sm px-4">
-                Explore Hardware Catalog &rarr;
+        <div class="my-3">
+            <div class="display-3 fw-bolder text-primary">404</div>
+            <h3 class="fw-bold text-dark mt-2">Resource Not Found</h3>
+            <p class="text-muted small mb-3">
+                The requested corporate address <code class="bg-light px-2 py-1 rounded text-danger">{{ requested_path|default:request.path }}</code> could not be located or may have been updated.
+            </p>
+        </div>
+
+        <!-- Integrated Search -->
+        <form action="{% url 'core:global_search' %}" method="GET" class="mb-4">
+            <div class="input-group">
+                <span class="input-group-text bg-light border-end-0"><i class="bi bi-search text-muted"></i></span>
+                <input type="text" name="q" class="form-control bg-light border-start-0" placeholder="Search products, FAQs, error guides...">
+                <button class="btn btn-primary px-3" type="submit">Search</button>
+            </div>
+        </form>
+
+        <!-- Quick Action Shortcuts -->
+        <div class="d-flex flex-wrap justify-content-center gap-2 pt-2 border-top">
+            <a href="{% url 'core:home' %}" class="btn btn-primary px-4 py-2 rounded-3">
+                <i class="bi bi-house-door-fill me-1"></i> Return Home
             </a>
-            <a href="{% url 'core:home' %}" class="btn btn-corp-outline btn-sm">
-                Return Home
+            <a href="{% url 'products:product_list' %}" class="btn btn-outline-primary px-4 py-2 rounded-3">
+                <i class="bi bi-grid-fill me-1"></i> Browse Products
             </a>
+            <a href="{% url 'faq:faq_list' %}" class="btn btn-outline-secondary px-3 py-2 rounded-3">
+                <i class="bi bi-question-circle me-1"></i> Help & FAQs
+            </a>
+        </div>
+
+        <div class="mt-4 pt-3 text-muted small border-top">
+            <span class="text-secondary"><i class="bi bi-shield-check text-success me-1"></i> PerkCart Corporate Portal Diagnostics</span>
         </div>
     </div>
 </div>

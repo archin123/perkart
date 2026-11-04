@@ -23,7 +23,11 @@ SECRET_KEY = os.getenv(
 )
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = os.getenv('DEBUG', 'True').lower() in ('true', '1', 'yes')
+# On Vercel, default to False to show custom branded error pages (404, 500)
+if os.getenv('VERCEL'):
+    DEBUG = os.getenv('DEBUG', 'False').lower() in ('true', '1', 'yes')
+else:
+    DEBUG = os.getenv('DEBUG', 'True').lower() in ('true', '1', 'yes')
 
 ALLOWED_HOSTS = [h.strip() for h in os.getenv('ALLOWED_HOSTS', '*').split(',') if h.strip()]
 if '.vercel.app' not in ALLOWED_HOSTS and '*' not in ALLOWED_HOSTS:
@@ -99,6 +103,7 @@ WSGI_APPLICATION = 'perkcart.wsgi.application'
 # Database
 # Default: SQLite3 for convenient local college development.
 # Supports PostgreSQL in production if DATABASE_URL environment variable is provided.
+DATABASE_URL = os.getenv('DATABASE_URL', '')
 DATABASE_URL = os.getenv('DATABASE_URL') or os.getenv('Database_url') or os.getenv('database_url') or ''
 if DATABASE_URL and (DATABASE_URL.startswith('postgres://') or DATABASE_URL.startswith('postgresql://')):
     try:
@@ -205,6 +210,7 @@ LOGIN_REDIRECT_URL = 'core:home'
 LOGOUT_REDIRECT_URL = 'core:home'
 
 # AI Assistant Configuration
+GEMINI_API_KEY = os.getenv('GEMINI_API_KEY', '')
 GEMINI_API_KEY = os.getenv('GEMINI_API_KEY') or os.getenv('API_Key') or os.getenv('API_KEY') or ''
 OPENAI_API_KEY = os.getenv('OPENAI_API_KEY', '')
 
